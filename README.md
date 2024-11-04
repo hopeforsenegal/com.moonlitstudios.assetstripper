@@ -1,4 +1,4 @@
-# AssetStripper 
+# Asset Stripper 
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/hopeforsenegal/immediatestyle/blob/master/LICENSE.md)
 
 **Asset Stripper** is a lean tool catered to increasing productivity and speed within the Unity Editor. With it, removing unused assets (or find assets that were thought to be used, but aren't, or perhaps have been duplicated). Finding and removing unused editor scripts or prefabs can increase the speed at which the editor opens. It also relieves us of wondering what can be safely removed from a project versus what should stay.
