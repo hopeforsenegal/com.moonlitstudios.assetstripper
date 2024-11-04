@@ -1,28 +1,16 @@
 {
-  "name": "com.temp.assetcleaner",
+  "name": "com.moonlitstudios.assetstripper",
   "version": "1.0.0",
   "displayName": "Asset Stripper",
-  "description": "Asset Stripper is a convenient style wrapper around Unity's UI components. All the benefits of an Immediate Mode UI but without having to give up the power of the Unity Editor. Layout out your UI in the typical Unity way and then, using code generation, immediately start coding their behaviors.",
+  "description": "Asset Stripper removes unused files and scripts that slowdown and distract developers from quick iteration on your game",
   "unity": "2018.1",
   "unityRelease": "0b5",
   "keywords": [
     "package",
     "unity",
-    "ui",
-    "immediate",
+    "strip",
+    "simple",
     "easy"
-  ],
-  "samples": [
-	{
-		"displayName": "GuessingGame",
-		"description": "A simple, yet complete, guessing game with Animations and Audio to help demonstrate just how versatile the API is and how it can handle most workflows (even for a Designer)",
-		"path": "GuessingGame~"
-	},
-	{
-		"displayName": "StyleComparisons",
-		"description": "Here we are just showing the stylistic code changes and workflow changes that is entailed in different UI workflows. Each Step is approximately what you would do in order to achieve the functionality that you see in those scenes. Open up the scenes and give them a shot :-).",
-		"path": "StyleComparisons~"
-	}
   ],
   "author": {
     "name": "Moonlit Studios",
