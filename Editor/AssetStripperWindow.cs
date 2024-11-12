@@ -90,7 +90,8 @@ public class AssetStripperWindow : EditorWindow
             }
         }
         if (!isWaitingForScan) {
-            EditorGUILayout.LabelField("Select unneeded assets for removal. Click on assets to view them in the Inspector.");
+            var richTextStyle = new GUIStyle(EditorStyles.label) { richText = true };
+            EditorGUILayout.LabelField("Select unneeded assets for removal. <b>Click</b> directly on assets to ping/view them in the <b>Inspector</b>.", richTextStyle);
             using (new EditorGUILayout.HorizontalScope()) {
                 events = GUILayout.Button("Select All") ? WindowEvents.SelectAll : events;
                 events = GUILayout.Button("Deselect All") ? WindowEvents.DeselectAll : events;
