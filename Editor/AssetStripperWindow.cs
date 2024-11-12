@@ -172,10 +172,12 @@ public class AssetStripperWindow : EditorWindow
                     }
                     EditorUtility.DisplayProgressBar("Stripping assets", "Finished!", 1);
                     AssetDatabase.Refresh();
+                    Debug.Log($"{filePathsToThoseMarkedForDelete.Length} asset(s) succesfully removed!");
                 }
                 finally {
                     EditorUtility.ClearProgressBar();
                 }
+                sDeleteAssetEntries.Clear();
                 Close();
             };
         }
