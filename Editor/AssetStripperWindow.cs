@@ -87,6 +87,10 @@ public class AssetStripperWindow : EditorWindow
                 foreach (var asset in sDeleteAssetEntries.Values) {
                     DrawAssetItem(asset, 0, ref selectedAsset);
                 }
+            } else {
+                if (!string.IsNullOrWhiteSpace(sFilterWords)) {
+                    EditorGUILayout.LabelField("There are currently no results to filter. No scan was performed yet!");
+                }
             }
         }
         if (!isWaitingForScan) {
