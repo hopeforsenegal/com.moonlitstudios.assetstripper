@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -34,7 +35,7 @@ public class AssetStripperWindow : EditorWindow
 
         /*- UI -*/
         if (isHiddenMetaFiles) {
-            EditorGUILayout.HelpBox($"Unable to Scan Project! .meta files are currently set to \"Hidden\" in project! Update \"Version Control\" under [Edit->Project Settings->Editor]", MessageType.Error);
+            EditorGUILayout.HelpBox("Unable to Scan Project! .meta files are currently set to \"Hidden\" in project! Update \"Version Control\" under [Edit->Project Settings->Editor]", MessageType.Error);
         }
         using (new EditorGUILayout.VerticalScope("box")) {
             if (!sIsIncludingScripts) EditorGUILayout.LabelField("Showing assets that are not referenced by the Editor.", EditorStyles.largeLabel);
@@ -136,8 +137,12 @@ public class AssetStripperWindow : EditorWindow
             }
         }
         if (events == WindowEvents.ScanProject) {
-            var assetDeleteFileGUIDList = Runtime.GatherAssetsToStrip(sIsIncludingScripts, sIsIncludingEditorScripts);
-            sDeleteAssetEntries = PopulateDeleteFileListing(assetDeleteFileGUIDList);
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
+                var assetDeleteFileGUIDList = Runtime.GatherAssetsToStrip(sIsIncludingScripts, sIsIncludingEditorScripts);
+                sDeleteAssetEntries = PopulateDeleteFileListing(assetDeleteFileGUIDList);
+            } else {
+                Debug.Log("User chose to cancel scan since there were unmodified changes");
+            }
         }
         if (events == WindowEvents.StripProject) {
             EditorApplication.delayCall += () =>
