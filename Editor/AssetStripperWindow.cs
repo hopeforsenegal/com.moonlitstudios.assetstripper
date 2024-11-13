@@ -9,7 +9,18 @@ using Object = UnityEngine.Object;
 public class AssetStripperWindow : EditorWindow
 {
     [MenuItem("Moonlit/Asset Stripper/Prepare Stripping", priority = 0)]
-    private static void CreateWindow() => GetWindow<AssetStripperWindow>();
+    private static void CreateWindow()
+    {
+        var window = GetWindow<AssetStripperWindow>();
+        var mainWindowRect = EditorGUIUtility.GetMainWindowPosition();
+        window.titleContent = new GUIContent("Asset Stripper");
+        window.position = new Rect(
+            mainWindowRect.center.x - 800 / 2,
+            mainWindowRect.center.y - 600 / 2,
+            800,
+            600
+        );
+    }
 
     private enum WindowEvents { StripProject = 1, SelectAll, DeselectAll, InvertSelection, ScanProject }
     private class AssetListing
@@ -71,7 +82,7 @@ public class AssetStripperWindow : EditorWindow
             GUILayout.FlexibleSpace();
         }
         GUILayout.Space(10);
-        EditorGUILayout.LabelField("Reference Folders");
+        EditorGUILayout.LabelField("Reference Folders (use additional folders for reference lookups alongside the 'Resources' folder)");
         Runtime.EditorPrefsReferenceFolder = EditorGUILayout.TextField(Runtime.EditorPrefsReferenceFolder);
         using (new EditorGUILayout.HorizontalScope("box")) {
             EditorGUILayout.LabelField("Separate Reference Folders by ';'. ex. [Assets/Plugins;Assets/Gizmos]");
