@@ -1,7 +1,7 @@
 # Asset Stripper 
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/hopeforsenegal/immediatestyle/blob/master/LICENSE.md)
 
-**Asset Stripper** is a lean tool catered to increasing productivity and speed within the Unity Editor. With it, removing unused assets (or find assets that were thought to be used, but aren't, or perhaps have been duplicated). Finding and removing unused editor scripts or prefabs can increase the speed at which the editor opens. It also relieves us of wondering what can be safely removed from a project versus what should stay.
+**Asset Stripper** removes unused assets (scripts/scenes/files/etc) from your Unity project. Finding and removing unused editor scripts or prefabs can increase the speed at which the Unity editor opens as well as removes clutter from your project.
 
 <img width="966" alt="Screenshot 2024-11-04 at 10 43 52 AM" src="https://github.com/user-attachments/assets/881b0646-ea44-4f3d-a340-fca2e9a94f65">
 
@@ -26,6 +26,7 @@
   }
 ```
 
+In Unity, launch the window by going to ```Moonlit->Asset Stripper->Prepare Stripping```
 None of that working? **Honestly, just reach out us!** (Links & methods towards the bottom).
 
 

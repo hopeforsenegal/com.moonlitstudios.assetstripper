@@ -15,8 +15,8 @@ public class AssetStripperWindow : EditorWindow
         var mainWindowRect = EditorGUIUtility.GetMainWindowPosition();
         window.titleContent = new GUIContent("Asset Stripper");
         window.position = new Rect(
-            mainWindowRect.center.x - 800 / 2,
-            mainWindowRect.center.y - 600 / 2,
+            mainWindowRect.center.x - 400, // 800/2
+            mainWindowRect.center.y - 300, // 600/2
             800,
             600
         );
@@ -50,10 +50,10 @@ public class AssetStripperWindow : EditorWindow
         }
         using (new EditorGUILayout.VerticalScope("box")) {
             if (!sIsIncludingScripts) EditorGUILayout.LabelField("Showing assets that are not referenced by the Editor.", EditorStyles.largeLabel);
-            if (!sIsIncludingScripts) EditorGUILayout.LabelField("Currently ignoring Game + Editor Scripts.");
+            if (!sIsIncludingScripts) EditorGUILayout.LabelField("Currently ignoring Runtime + Editor Scripts.");
             if (sIsIncludingScripts && !sIsIncludingEditorScripts) EditorGUILayout.LabelField("Showing assets that are not referenced in a build of the game.", EditorStyles.largeLabel);
             if (sIsIncludingScripts && !sIsIncludingEditorScripts) EditorGUILayout.LabelField("Currently ignoring Editor Scripts.");
-            if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField("Showing assets that are not referenced at all by the Game or Editor.", EditorStyles.largeLabel);
+            if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField("Showing assets that are not referenced at all by the Runtime or Editor.", EditorStyles.largeLabel);
             if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField("text/json/jar files may appear here that get used in nonspecific ways.");
         }
         using (new EditorGUILayout.HorizontalScope()) {
@@ -64,7 +64,7 @@ public class AssetStripperWindow : EditorWindow
         }
         using (new EditorGUILayout.HorizontalScope()) {
             GUILayout.Space(10);
-            EditorGUILayout.LabelField("Include Game Scripts", GUILayout.Width(170));
+            EditorGUILayout.LabelField("Include Runtime Scripts", GUILayout.Width(170));
             sIsIncludingScripts = EditorGUILayout.Toggle(sIsIncludingScripts);
             GUILayout.FlexibleSpace();
             using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox)) {
@@ -187,7 +187,7 @@ public class AssetStripperWindow : EditorWindow
                     }
                     EditorUtility.DisplayProgressBar("Stripping assets", "Finished!", 1);
                     AssetDatabase.Refresh();
-                    Debug.Log($"{filePathsToThoseMarkedForDelete.Length} asset(s) succesfully removed!");
+                    Debug.Log($"{filePathsToThoseMarkedForDelete.Length} asset(s) successfully removed!");
                 }
                 finally {
                     EditorUtility.ClearProgressBar();

@@ -20,7 +20,7 @@ public static class Runtime
     [Serializable]
     public class FileReferenceInformation { public HashSet<string> referenceGUIDs = new HashSet<string>(); }
 
-    public static bool EditorPrefsBackupAssetsByCreatingPackage { get => EditorPrefs.GetInt(nameof(EditorPrefsBackupAssetsByCreatingPackage), 0) == 1; set => EditorPrefs.SetInt(nameof(EditorPrefsBackupAssetsByCreatingPackage), value ? 1 : 0); }
+    public static bool EditorPrefsBackupAssetsByCreatingPackage { get => EditorPrefs.GetInt(nameof(EditorPrefsBackupAssetsByCreatingPackage), 1) == 1; set => EditorPrefs.SetInt(nameof(EditorPrefsBackupAssetsByCreatingPackage), value ? 1 : 0); } // Default to being on to make our users feel some trust
     public static string EditorPrefsReferenceFolder { get => EditorPrefs.GetString(nameof(EditorPrefsReferenceFolder), "Assets/Plugins;"); set => EditorPrefs.SetString(nameof(EditorPrefsReferenceFolder), value); }
     private static readonly Dictionary<string, FileReferenceInformation> sFileReferenceInformation = new Dictionary<string, FileReferenceInformation>();
     private static string[] sAllFilesInAssetsDirectoryCache;
