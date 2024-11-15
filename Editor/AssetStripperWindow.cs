@@ -30,7 +30,6 @@ public class AssetStripperWindow : EditorWindow
         public bool IsMarkedForDelete, IsExpanded;
         public readonly Dictionary<string, AssetListing> Children = new Dictionary<string, AssetListing>();
     }
-
     private class BackgroundColorScope : GUI.Scope
     {
         private readonly Color m_Color;
@@ -140,12 +139,11 @@ public class AssetStripperWindow : EditorWindow
             }
             EditorGUILayout.Space();
             if (!isWaitingForScan) {
-                var originalColor = GUI.backgroundColor;
-                GUI.backgroundColor = BetterBlue;
-                var ok = GUILayout.Button("Strip Assets", customButtonStyle, GUILayout.Width(140));
-                GUI.backgroundColor = originalColor;
-                if (ok) {
-                    events = EditorUtility.DisplayDialog("Are you sure?", "This will remove the chosen assets from the project.", "OK", "Cancel") ? WindowEvents.StripProject : events;
+                using (new BackgroundColorScope(BetterBlue)) {
+                    var ok = GUILayout.Button("Strip Assets", customButtonStyle, GUILayout.Width(140));
+                    if (ok) {
+                        events = EditorUtility.DisplayDialog("Are You Sure?", "This will remove the chosen assets from the project.", "OK", "Cancel") ? WindowEvents.StripProject : events;
+                    }
                 }
             }
         }
