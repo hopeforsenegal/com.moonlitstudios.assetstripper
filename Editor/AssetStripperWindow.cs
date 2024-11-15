@@ -31,6 +31,13 @@ public class AssetStripperWindow : EditorWindow
         public readonly Dictionary<string, AssetListing> Children = new Dictionary<string, AssetListing>();
     }
 
+    private class BackgroundColorScope : GUI.Scope
+    {
+        private readonly Color m_Color;
+        public BackgroundColorScope(Color tempColor) { m_Color = GUI.backgroundColor; GUI.backgroundColor = tempColor; }
+        protected override void CloseScope() => GUI.backgroundColor = m_Color;
+    }
+
     private static readonly Color BetterBlue = new Color(75 / 255f, 175f / 255f, 1f);
     private static Dictionary<string, AssetListing> sDeleteAssetEntries = new Dictionary<string, AssetListing>();
     private static Vector2 sScroll;
@@ -48,71 +55,76 @@ public class AssetStripperWindow : EditorWindow
         if (isHiddenMetaFiles) {
             EditorGUILayout.HelpBox("Unable to Scan Project! .meta files are currently set to \"Hidden\" in project! Update \"Version Control\" under [Edit->Project Settings->Editor]", MessageType.Error);
         }
-        using (new EditorGUILayout.VerticalScope("box")) {
-            if (!sIsIncludingScripts) EditorGUILayout.LabelField("Showing assets that are not referenced by the Editor.", EditorStyles.largeLabel);
-            if (!sIsIncludingScripts) EditorGUILayout.LabelField("Currently ignoring Runtime + Editor Scripts.");
-            if (sIsIncludingScripts && !sIsIncludingEditorScripts) EditorGUILayout.LabelField("Showing assets that are not referenced in a build of the game.", EditorStyles.largeLabel);
-            if (sIsIncludingScripts && !sIsIncludingEditorScripts) EditorGUILayout.LabelField("Currently ignoring Editor Scripts.");
-            if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField("Showing assets that are not referenced at all by the Runtime or Editor.", EditorStyles.largeLabel);
-            if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField("text/json/jar files may appear here that get used in nonspecific ways.");
-        }
-        using (new EditorGUILayout.HorizontalScope()) {
-            GUILayout.Space(10);
-            EditorGUILayout.LabelField("Backup By Creating Package", GUILayout.Width(170));
-            Runtime.EditorPrefsBackupAssetsByCreatingPackage = EditorGUILayout.Toggle(Runtime.EditorPrefsBackupAssetsByCreatingPackage);
-            GUILayout.FlexibleSpace();
-        }
-        using (new EditorGUILayout.HorizontalScope()) {
-            GUILayout.Space(10);
-            EditorGUILayout.LabelField("Include Runtime Scripts", GUILayout.Width(170));
-            sIsIncludingScripts = EditorGUILayout.Toggle(sIsIncludingScripts);
-            GUILayout.FlexibleSpace();
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox)) {
-                var infoContent = new GUIContent(EditorGUIUtility.IconContent("console.infoicon").image);
-                var infoStyle = new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = Color.blue }, fontSize = 12, alignment = TextAnchor.MiddleCenter };
-                GUILayout.Label(infoContent, infoStyle, GUILayout.Width(20), GUILayout.Height(15));
-                EditorGUILayout.LabelField("Including scripts can take significantly longer on larger projects.", EditorStyles.wordWrappedLabel);
+        EditorGUILayout.LabelField("To Scan", new GUIStyle(EditorStyles.largeLabel) { fontSize = 20 }, GUILayout.Height(25f));
+
+        var thickBoxStyle = new GUIStyle("box") { border = new RectOffset(2, 2, 2, 2), padding = new RectOffset(10, 10, 10, 10) };
+        using (new EditorGUILayout.VerticalScope(thickBoxStyle)) {
+            using (new EditorGUILayout.HorizontalScope()) {
+                using (new EditorGUILayout.VerticalScope()) {
+                    using (new EditorGUILayout.HorizontalScope()) {
+                        GUILayout.Space(10);
+                        sIsIncludingScripts = EditorGUILayout.Toggle(sIsIncludingScripts, GUILayout.Width(20));
+                        EditorGUILayout.LabelField("Include Runtime Scripts", GUILayout.Width(170));
+                        GUILayout.FlexibleSpace();
+                    }
+                    using (new EditorGUILayout.HorizontalScope())
+                    using (new EditorGUI.DisabledGroupScope(!sIsIncludingScripts)) {
+                        GUILayout.Space(10);
+                        sIsIncludingEditorScripts = EditorGUILayout.Toggle(sIsIncludingEditorScripts, GUILayout.Width(20));
+                        GUILayout.Space(30);
+                        EditorGUILayout.LabelField("Include Editor Scripts", GUILayout.Width(140));
+                        GUILayout.FlexibleSpace();
+                    }
+                }
+                using (new BackgroundColorScope(Color.cyan))
+                using (new EditorGUILayout.VerticalScope("box", GUILayout.Width(500))) {
+                    if (!sIsIncludingScripts) EditorGUILayout.LabelField("Scan for all non scripts that are not referenced by the Editor.", EditorStyles.largeLabel);
+                    if (!sIsIncludingScripts) EditorGUILayout.LabelField($"Reference: Scenes (Build Settings) & [Assets/Resources;{Runtime.EditorPrefsReferenceFolder}]");
+                    if (!sIsIncludingScripts) EditorGUILayout.LabelField("Ignore: Runtime & Editor Scripts");
+                    if (sIsIncludingScripts && !sIsIncludingEditorScripts) EditorGUILayout.LabelField("Scan for all assets that are not referenced in a build of the game.", EditorStyles.largeLabel);
+                    if (sIsIncludingScripts && !sIsIncludingEditorScripts) EditorGUILayout.LabelField($"Reference: Scenes (Build Settings) & [Assets/Resources;{Runtime.EditorPrefsReferenceFolder}]");
+                    if (sIsIncludingScripts && !sIsIncludingEditorScripts) EditorGUILayout.LabelField("Ignore: Editor Scripts");
+                    if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField("Scan for all assets that are not referenced at all by the Runtime or Editor.", EditorStyles.largeLabel);
+                    if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField($"Reference: Scenes (Build Settings) & [Assets/Resources;{Runtime.EditorPrefsReferenceFolder}]");
+                    if (sIsIncludingScripts && sIsIncludingEditorScripts) EditorGUILayout.LabelField("");
+                }
             }
-        }
-        using (new EditorGUILayout.HorizontalScope())
-        using (new EditorGUI.DisabledGroupScope(!sIsIncludingScripts)) {
-            GUILayout.Space(40);
-            EditorGUILayout.LabelField("Include Editor Scripts", GUILayout.Width(140));
-            sIsIncludingEditorScripts = EditorGUILayout.Toggle(sIsIncludingEditorScripts);
-            GUILayout.FlexibleSpace();
-        }
-        GUILayout.Space(10);
-        EditorGUILayout.LabelField("Reference Folders (use additional folders for reference lookups alongside the 'Resources' folder)");
-        Runtime.EditorPrefsReferenceFolder = EditorGUILayout.TextField(Runtime.EditorPrefsReferenceFolder);
-        using (new EditorGUILayout.HorizontalScope("box")) {
             EditorGUILayout.LabelField("Separate Reference Folders by ';'. ex. [Assets/Plugins;Assets/Gizmos]");
+            Runtime.EditorPrefsReferenceFolder = EditorGUILayout.TextField(Runtime.EditorPrefsReferenceFolder);
         }
-        sFilterWords = EditorGUILayout.TextField("Filters:", sFilterWords, EditorStyles.toolbarSearchField);
-        using (new EditorGUILayout.HorizontalScope("box")) {
-            EditorGUILayout.LabelField("Use keywords to filter on files (not folders). Use '-' before a keyword to exclude it. (ex. '.png' filters on png files)");
+        using (new EditorGUILayout.HorizontalScope()) {
+            GUILayout.FlexibleSpace();
+            Runtime.EditorPrefsBackupAssetsByCreatingPackage = EditorGUILayout.Toggle(Runtime.EditorPrefsBackupAssetsByCreatingPackage, GUILayout.Width(20));
+            EditorGUILayout.LabelField("Generate Backup Package", GUILayout.Width(170));
         }
         EditorGUILayout.Space();
-        using (var scrollScope = new EditorGUILayout.ScrollViewScope(sScroll)) {
-            sScroll = scrollScope.scrollPosition;
+        using (new EditorGUILayout.VerticalScope("box")) {
+            using (var scrollScope = new EditorGUILayout.ScrollViewScope(sScroll)) {
+                sScroll = scrollScope.scrollPosition;
+                if (!isWaitingForScan) {
+                    foreach (var asset in sDeleteAssetEntries.Values) {
+                        DrawAssetItem(asset, 0, ref selectedAsset);
+                    }
+                } else {
+                    if (!string.IsNullOrWhiteSpace(sFilterWords)) {
+                        EditorGUILayout.LabelField("There are currently no results to filter. No scan was performed yet!");
+                    }
+                }
+            }
             if (!isWaitingForScan) {
-                foreach (var asset in sDeleteAssetEntries.Values) {
-                    DrawAssetItem(asset, 0, ref selectedAsset);
+                var richTextStyle = new GUIStyle(EditorStyles.label) { richText = true };
+                EditorGUILayout.LabelField("Select unneeded assets for removal. <b>Click</b> directly on assets to ping/view them in the <b>Inspector</b>.", richTextStyle);
+                using (new EditorGUILayout.HorizontalScope()) {
+                    events = GUILayout.Button("Select All") ? WindowEvents.SelectAll : events;
+                    events = GUILayout.Button("Deselect All") ? WindowEvents.DeselectAll : events;
+                    events = GUILayout.Button("Invert Selection") ? WindowEvents.InvertSelection : events;
                 }
-            } else {
-                if (!string.IsNullOrWhiteSpace(sFilterWords)) {
-                    EditorGUILayout.LabelField("There are currently no results to filter. No scan was performed yet!");
-                }
+                GUILayout.Space(10);
             }
         }
-        if (!isWaitingForScan) {
-            var richTextStyle = new GUIStyle(EditorStyles.label) { richText = true };
-            EditorGUILayout.LabelField("Select unneeded assets for removal. <b>Click</b> directly on assets to ping/view them in the <b>Inspector</b>.", richTextStyle);
-            using (new EditorGUILayout.HorizontalScope()) {
-                events = GUILayout.Button("Select All") ? WindowEvents.SelectAll : events;
-                events = GUILayout.Button("Deselect All") ? WindowEvents.DeselectAll : events;
-                events = GUILayout.Button("Invert Selection") ? WindowEvents.InvertSelection : events;
-            }
-        }
+
+        sFilterWords = EditorGUILayout.TextField("Filter:", sFilterWords, EditorStyles.toolbarSearchField);
+        EditorGUILayout.LabelField("Use keywords to filter on files (not folders). Use '-' before a keyword to exclude it. (ex. '.png' filters on png files)");
         using (new EditorGUILayout.HorizontalScope("box")) {
             var customButtonStyle = new GUIStyle(GUI.skin.button)
             {
@@ -231,7 +243,7 @@ public class AssetStripperWindow : EditorWindow
             if (asset.Children.Count > 0) {
                 asset.IsExpanded = EditorGUILayout.Foldout(asset.IsExpanded, string.Empty, true);
             } else {
-                GUILayout.Space(15); // Align with foldout arrow
+                GUILayout.Space(60); // Align with foldout arrow
             }
 
             var wasMarkedForDelete = asset.IsMarkedForDelete;
