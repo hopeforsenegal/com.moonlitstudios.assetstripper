@@ -3,12 +3,11 @@
 
 **Asset Stripper** removes unused assets (scripts/scenes/files/etc) from your Unity project. Finding and removing unused editor scripts or prefabs can increase the speed at which the Unity editor opens as well as removes clutter from your project.
 
-<img width="966" alt="Screenshot 2024-11-04 at 10 43 52 AM" src="https://github.com/user-attachments/assets/881b0646-ea44-4f3d-a340-fca2e9a94f65">
-
+<img width="912" alt="Screenshot 2024-11-15 at 4 08 49 PM" src="https://github.com/user-attachments/assets/99c824ff-ca26-4a55-9e99-5f31d1da54f5">
 
 ## Features
 
-* **Back up assets** that were stripped with making a package
+* **Back up assets** that were stripped by generating a package
 * **Scan** the project for unused game and editor scripts (including limited support for regular classes and structs)
 * **Reference folders** which is useful for finding unused third party examples, prefabs, scenes, or scripts
 * **Filter** by keyword on the results of a scan (match or exclude)
