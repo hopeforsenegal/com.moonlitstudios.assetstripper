@@ -51,16 +51,16 @@ public static class Runtime
                 if (shouldCancel) { cts.Cancel(); return new string[] { }; }
 
                 BuildCodeFileMap(shouldFindEditorCodeFiles, out var codeFilesDeduplicated, out var firstPassFiles, out var firstPassTypes, out var allTypes, out var codeToFileMap);
-                shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating code references... might take a while", 0.8f);
-                if (shouldCancel) { cts.Cancel(); return new string[] { }; }
 
                 foreach (var codePath in firstPassFiles) {
+                    shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating code references... might take a while", 0.8f);
+                    if (shouldCancel) { cts.Cancel(); return new string[] { }; }
                     PopulateReferenceClasses(sFileReferenceInformation, codeToFileMap, AssetDatabase.AssetPathToGUID(codePath), codePath, firstPassTypes);
                 }
-                shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating code references... might take a while (pass 2)", 0.85f);
-                if (shouldCancel) { cts.Cancel(); return new string[] { }; }
 
                 foreach (var codePath in codeFilesDeduplicated) {
+                    shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating code references... might take a while (pass 2)", 0.85f);
+                    if (shouldCancel) { cts.Cancel(); return new string[] { }; }
                     PopulateReferenceClasses(sFileReferenceInformation, codeToFileMap, AssetDatabase.AssetPathToGUID(codePath), codePath, allTypes);
                 }
                 if (shouldFindEditorCodeFiles) {
