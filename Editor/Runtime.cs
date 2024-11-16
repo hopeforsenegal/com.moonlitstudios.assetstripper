@@ -324,9 +324,7 @@ public static class Runtime
                     codeLines = codeBlob.Split(Environment.NewLine);
                     hasSetBlob = true;
                 }
-            }
 
-            if (!hasNoNamespace) {
                 var usingNamespace = false;
                 foreach (var line in codeLines) {
                     if (string.IsNullOrWhiteSpace(line)) continue;
@@ -350,16 +348,15 @@ public static class Runtime
                         if (line.Contains(";")) continue; // ignore semi-colons which are not present on the extension method declarations
                         if (line.Contains("#")) continue; // ignore preprocessor lines
                         // We need to check for "extension methods" like     void Methods(this Gameobject bob){}
-                        if (line.Contains("this ") && line.Contains(typeToRegex.TypeName)) {
-                            foreach (var baseReference in fileReferenceInformation) { // Double for loop
-                                if (baseReference.Key == typeGuid) {
-                                    baseReference.Value.referenceGUIDs.Add(guid);
-                                    break;
-                                }
+                        if (!line.Contains("this ")) continue;
+                        if (!line.Contains(typeToRegex.TypeName)) continue;
+                        foreach (var baseReference in fileReferenceInformation) { // Double for loop
+                            if (baseReference.Key == typeGuid) {
+                                baseReference.Value.referenceGUIDs.Add(guid);
+                                break;
                             }
                         }
                     }
-
                 }
                 if (!byReference.referenceGUIDs.Contains(typeGuid)) {
                     if (!hasSetBlob) { // Optimization where we only read the file once upon needing it
