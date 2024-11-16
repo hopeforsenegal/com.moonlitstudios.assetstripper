@@ -40,7 +40,8 @@ public static class Runtime
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating asset references", 0.3f);
             if (shouldCancel) { cts.Cancel(); return new string[] { }; }
 
-            PopulateAssetReferences(sFileReferenceInformation);
+            shouldCancel = PopulateAssetReferences(sFileReferenceInformation);
+            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating shader references", 0.6f);
             if (shouldCancel) { cts.Cancel(); return new string[] { }; }
 
@@ -76,9 +77,10 @@ public static class Runtime
             var assetDeleteFileGUIDList = new HashSet<string>();
             var referenceFolders = EditorPrefsReferenceFolder.Split(";");
             foreach (var file in sAllFilesInAssetsDirectoryCache) {
-                if (!shouldFindCodeFiles && Path.GetExtension(file) == ".cs") continue;
-                if (Path.GetExtension(file) == ".dll") continue;
-                if (Path.GetExtension(file) == ".meta") continue;
+                var extension = Path.GetExtension(file);
+                if (!shouldFindCodeFiles && extension == ".cs") continue;
+                if (extension == ".dll") continue;
+                if (extension == ".meta") continue;
                 if (Regex.IsMatch(file, "[\\/\\\\]Resources[\\/\\\\]")) continue;
                 var isReferenceFolderContinue = false;
                 foreach (var rf in referenceFolders) {
@@ -121,21 +123,26 @@ public static class Runtime
         }
     }
 
-    private static void PopulateAssetReferences(Dictionary<string, FileReferenceInformation> fileReferenceInformation)
+    private static bool PopulateAssetReferences(Dictionary<string, FileReferenceInformation> fileReferenceInformation)
     {
         foreach (var file in sAllFilesInAssetsDirectoryCache) {
             if (!File.Exists(file)) continue;
-            if (Path.GetExtension(file) == ".cg") continue;
-            if (Path.GetExtension(file) == ".cginc") continue;
-            if (Path.GetExtension(file) == ".cs") continue;
-            if (Path.GetExtension(file) == ".meta") continue;
-            if (Path.GetExtension(file) == ".shader") continue;
+            var extension = Path.GetExtension(file);
+            if (extension == ".cg") continue;
+            if (extension == ".cginc") continue;
+            if (extension == ".cs") continue;
+            if (extension == ".meta") continue;
+            if (extension == ".shader") continue;
+
+            var shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating asset references", 0.3f);
+            if (shouldCancel) { cts.Cancel(); return true; }
 
             var byReference = GetOrAdd(fileReferenceInformation, AssetDatabase.AssetPathToGUID(file), new FileReferenceInformation { referenceGUIDs = new HashSet<string>() });
             foreach (var dependentFile in AssetDatabase.GetDependencies(new string[] { file })) {
                 byReference.referenceGUIDs.Add(AssetDatabase.AssetPathToGUID(dependentFile));
             }
         }
+        return false;
     }
 
     private static void PopulateShaderReferences(Dictionary<string, FileReferenceInformation> fileReferenceInformation)

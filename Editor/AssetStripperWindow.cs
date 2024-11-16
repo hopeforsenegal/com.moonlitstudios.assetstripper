@@ -213,8 +213,12 @@ public class AssetStripperWindow : EditorWindow
             };
         }
 
-        if (Runtime.sPerformScan != null && Runtime.sPerformScan.Status == TaskStatus.Created) {
-            Runtime.sPerformScan.RunSynchronously();
+        if (Runtime.sPerformScan != null) {
+            if (Runtime.sPerformScan.Status == TaskStatus.Created) {
+                Runtime.sPerformScan.RunSynchronously();
+            } else if (Runtime.sPerformScan.Status == TaskStatus.Running) {
+                _ = Task.Yield();
+            }
         }
     }
 
