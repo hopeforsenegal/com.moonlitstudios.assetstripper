@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -166,12 +164,8 @@ public class AssetStripperWindow : EditorWindow
         }
         if (events == WindowEvents.ScanProject) {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
-                Runtime.cts = new CancellationTokenSource();
-                Runtime.sPerformScan = new Task(() =>
-                {
-                    var assetDeleteFileGUIDList = Runtime.GatherAssetsToStrip(sIsIncludingScripts, sIsIncludingEditorScripts);
-                    sDeleteAssetEntries = PopulateDeleteFileListing(assetDeleteFileGUIDList);
-                }, Runtime.cts.Token);
+                var assetDeleteFileGUIDList = Runtime.GatherAssetsToStrip(sIsIncludingScripts, sIsIncludingEditorScripts);
+                sDeleteAssetEntries = PopulateDeleteFileListing(assetDeleteFileGUIDList);
             } else {
                 Debug.Log("The user has chosen to cancel scan since there were unmodified changes.");
             }
@@ -211,14 +205,6 @@ public class AssetStripperWindow : EditorWindow
                 sDeleteAssetEntries.Clear();
                 Close();
             };
-        }
-
-        if (Runtime.sPerformScan != null) {
-            if (Runtime.sPerformScan.Status == TaskStatus.Created) {
-                Runtime.sPerformScan.RunSynchronously();
-            } else if (Runtime.sPerformScan.Status == TaskStatus.Running) {
-                _ = Task.Yield();
-            }
         }
     }
 

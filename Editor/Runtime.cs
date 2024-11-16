@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,8 +22,6 @@ public static class Runtime
 
     public static bool EditorPrefsBackupAssetsByCreatingPackage { get => EditorPrefs.GetInt(nameof(EditorPrefsBackupAssetsByCreatingPackage), 1) == 1; set => EditorPrefs.SetInt(nameof(EditorPrefsBackupAssetsByCreatingPackage), value ? 1 : 0); } // Default to being on to make our users feel some trust
     public static string EditorPrefsReferenceFolder { get => EditorPrefs.GetString(nameof(EditorPrefsReferenceFolder), "Assets/Plugins;"); set => EditorPrefs.SetString(nameof(EditorPrefsReferenceFolder), value); }
-    public static Task sPerformScan;
-    public static CancellationTokenSource cts;
     private static readonly Dictionary<string, FileReferenceInformation> sFileReferenceInformation = new Dictionary<string, FileReferenceInformation>();
     private static string[] sAllFilesInAssetsDirectoryCache;
 
@@ -33,46 +29,46 @@ public static class Runtime
     {
         try {
             var shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Prepping project", 0f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             sFileReferenceInformation.Clear();
             sAllFilesInAssetsDirectoryCache = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories);
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating asset references", 0.3f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             shouldCancel = PopulateAssetReferences(sFileReferenceInformation);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating shader references", 0.6f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             PopulateShaderReferences(sFileReferenceInformation);
             if (shouldFindCodeFiles) {
                 shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Building file map", 0.7f);
-                if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+                if (shouldCancel) { return new string[] { }; }
 
                 BuildCodeFileMap(shouldFindEditorCodeFiles, out var codeFilesDeduplicated, out var firstPassFiles, out var firstPassTypes, out var allTypes, out var codeToFileMap);
 
                 foreach (var codePath in firstPassFiles) {
                     shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating code references... might take a while", 0.8f);
-                    if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+                    if (shouldCancel) { return new string[] { }; }
                     PopulateReferenceClasses(sFileReferenceInformation, codeToFileMap, AssetDatabase.AssetPathToGUID(codePath), codePath, firstPassTypes);
                 }
 
                 foreach (var codePath in codeFilesDeduplicated) {
                     shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating code references... might take a while (pass 2)", 0.85f);
-                    if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+                    if (shouldCancel) { return new string[] { }; }
                     PopulateReferenceClasses(sFileReferenceInformation, codeToFileMap, AssetDatabase.AssetPathToGUID(codePath), codePath, allTypes);
                 }
                 if (shouldFindEditorCodeFiles) {
                     shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating code references... might take a while (pass 3)", 0.9f);
-                    if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+                    if (shouldCancel) { return new string[] { }; }
 
                     PopulateCustomEditorClasses(sFileReferenceInformation, codeToFileMap, allTypes);
                 }
             }
 
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populated all references", 1f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             var assetDeleteFileGUIDList = new HashSet<string>();
             var referenceFolders = EditorPrefsReferenceFolder.Split(";");
@@ -93,28 +89,28 @@ public static class Runtime
             }
 
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Referencing", "Starting on relevant files", 0f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             RemoveAssetsInResourceFolderFromDeleteList(assetDeleteFileGUIDList, sFileReferenceInformation);
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Referencing", "Pruned references against Resources", 0.25f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             RemoveScenesInBuildSettingsFromDeleteList(assetDeleteFileGUIDList, sFileReferenceInformation);
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Referencing", "Pruned references against Scenes", 0.5f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             RemoveStaticAndPartialsClassesFromDeleteList(assetDeleteFileGUIDList, sFileReferenceInformation);
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Referencing", "Pruned references against Static and Partial classes", 0.75f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             if (shouldFindEditorCodeFiles) {
                 RemoveEditorScriptsFromDeleteList(assetDeleteFileGUIDList, sFileReferenceInformation);
                 shouldCancel = EditorUtility.DisplayCancelableProgressBar("Referencing", "Pruned references against Editor", 0.825f);
-                if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+                if (shouldCancel) { return new string[] { }; }
             }
 
             shouldCancel = EditorUtility.DisplayCancelableProgressBar("Referencing", "Complete", 1f);
-            if (shouldCancel) { cts.Cancel(); return new string[] { }; }
+            if (shouldCancel) { return new string[] { }; }
 
             return new List<string>(assetDeleteFileGUIDList).ToArray();
         }
@@ -135,7 +131,7 @@ public static class Runtime
             if (extension == ".shader") continue;
 
             var shouldCancel = EditorUtility.DisplayCancelableProgressBar("Populating Information", "Populating asset references", 0.3f);
-            if (shouldCancel) { cts.Cancel(); return true; }
+            if (shouldCancel) { return true; }
 
             var byReference = GetOrAdd(fileReferenceInformation, AssetDatabase.AssetPathToGUID(file), new FileReferenceInformation { referenceGUIDs = new HashSet<string>() });
             foreach (var dependentFile in AssetDatabase.GetDependencies(new string[] { file })) {
