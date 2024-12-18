@@ -205,11 +205,11 @@ public static class Runtime
         allTypes = new List<TypeToRegex>();
         codeToFileGuidMap = new Dictionary<Type, HashSet<string>>();
 
-        if (File.Exists(firstPassAssemblyPath)) foreach (var type in Assembly.LoadFile(firstPassAssemblyPath).GetTypes()) firstPassTypes.Add(new TypeToRegex() { Type = type });
-        if (shouldFindEditorCodeFiles && File.Exists(firstPassEditorAssemblyPath)) foreach (var type in Assembly.LoadFile(firstPassEditorAssemblyPath).GetTypes()) firstPassTypes.Add(new TypeToRegex() { Type = type });
+        if (File.Exists(firstPassAssemblyPath)) foreach (var type in Assembly.LoadFile(firstPassAssemblyPath).GetTypes()) firstPassTypes.Add(new TypeToRegex { Type = type });
+        if (shouldFindEditorCodeFiles && File.Exists(firstPassEditorAssemblyPath)) foreach (var type in Assembly.LoadFile(firstPassEditorAssemblyPath).GetTypes()) firstPassTypes.Add(new TypeToRegex { Type = type });
         PopulateCodeFileDictionary(fileTypes, firstPassTypes, firstPassFiles.ToArray());
-        if (File.Exists(assemblyPath)) foreach (var type in Assembly.LoadFile(assemblyPath).GetTypes()) allTypes.Add(new TypeToRegex() { Type = type });
-        if (shouldFindEditorCodeFiles && File.Exists(editorAssemblyPath)) foreach (var type in Assembly.LoadFile(editorAssemblyPath).GetTypes()) allTypes.Add(new TypeToRegex() { Type = type });
+        if (File.Exists(assemblyPath)) foreach (var type in Assembly.LoadFile(assemblyPath).GetTypes()) allTypes.Add(new TypeToRegex { Type = type });
+        if (shouldFindEditorCodeFiles && File.Exists(editorAssemblyPath)) foreach (var type in Assembly.LoadFile(editorAssemblyPath).GetTypes()) allTypes.Add(new TypeToRegex { Type = type });
         PopulateCodeFileDictionary(fileTypes, allTypes, codeFilesDeduplicated);
 
         allTypes.AddRange(firstPassTypes);
@@ -258,14 +258,14 @@ public static class Runtime
         return filesUnderDirectory;
     }
 
-    private static void PopulateCodeFileDictionary(Dictionary<string, AssemblyTypeInformation> fileTypes, IEnumerable<TypeToRegex> alltypes, IEnumerable<string> codeFilePaths)
+    private static void PopulateCodeFileDictionary(Dictionary<string, AssemblyTypeInformation> fileTypes, IEnumerable<TypeToRegex> allTypes, IEnumerable<string> codeFilePaths)
     {
         foreach (var codePath in codeFilePaths) {
             var codeBlob = StripOutComments(File.ReadAllText(codePath));
-            var byReferenceDatedType = GetOrAdd(fileTypes, AssetDatabase.AssetPathToGUID(codePath), new AssemblyTypeInformation { });
+            var byReferenceDatedType = GetOrAdd(fileTypes, AssetDatabase.AssetPathToGUID(codePath), new AssemblyTypeInformation());
             byReferenceDatedType.uniqueFullTypeNames.Clear();
 
-            foreach (var typeToRegex in alltypes) {
+            foreach (var typeToRegex in allTypes) {
                 var type = typeToRegex.Type;
                 if (type.IsNested) continue;
                 if (!string.IsNullOrWhiteSpace(type.Namespace)) {

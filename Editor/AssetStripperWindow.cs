@@ -21,15 +21,68 @@ public class AssetStripperWindow : EditorWindow
             600
         );
     }
+    protected void OnDestroy()
+    {
+        SessionState.EraseString(nameof(sDeleteAssetEntries));
+        sDeleteAssetEntries.Clear();
+    }
 
-    private enum WindowEvents { StripProject = 1, SelectAll, DeselectAll, InvertSelection, ScanProject }
     private class AssetListing
     {
         public string Path;
-        public Texture Icon;
+        public Texture2D Icon;
         public bool IsMarkedForDelete, IsExpanded;
-        public readonly Dictionary<string, AssetListing> Children = new Dictionary<string, AssetListing>();
+        public Dictionary<string, AssetListing> Children = new Dictionary<string, AssetListing>();
     }
+    [System.Serializable]
+    private class SerializableAssetListing
+    {
+        public string Path;
+        public bool IsMarkedForDelete, IsExpanded;
+        public List<SerializableAssetListing> Children = new List<SerializableAssetListing>();
+    }
+    [System.Serializable]
+    private class SerializableAssetListingDictionary
+    {
+        public List<SerializableAssetListing> Entries = new List<SerializableAssetListing>();
+    }
+    private static SerializableAssetListing ConvertToSerializable(AssetListing listing)
+    {
+        var serializable = new SerializableAssetListing { Path = listing.Path, IsMarkedForDelete = listing.IsMarkedForDelete, IsExpanded = listing.IsExpanded };
+        foreach (var child in listing.Children) serializable.Children.Add(ConvertToSerializable(child.Value));
+        return serializable;
+    }
+    private static AssetListing ConvertFromSerializable(SerializableAssetListing serializable)
+    {
+        var listing = new AssetListing { Path = serializable.Path, Icon = LoadAppropiateIcon(Path.HasExtension(serializable.Path), serializable.Path), IsMarkedForDelete = serializable.IsMarkedForDelete, IsExpanded = serializable.IsExpanded };
+        foreach (var child in serializable.Children) {
+            var childListing = ConvertFromSerializable(child);
+            listing.Children[childListing.Path] = childListing;
+        }
+        return listing;
+    }
+
+    private static void SaveToSessionState(Dictionary<string, AssetListing> sDeleteAssetEntries)
+    {
+        var serializable = new SerializableAssetListingDictionary();
+        foreach (var entry in sDeleteAssetEntries) serializable.Entries.Add(ConvertToSerializable(entry.Value));
+        SessionState.SetString(nameof(sDeleteAssetEntries), JsonUtility.ToJson(serializable));
+    }
+    private static Dictionary<string, AssetListing> LoadFromSessionState()
+    {
+        var json = SessionState.GetString(nameof(sDeleteAssetEntries), string.Empty);
+        var assetListing = new Dictionary<string, AssetListing>();
+        if (!string.IsNullOrEmpty(json)) {
+            foreach (var entry in JsonUtility.FromJson<SerializableAssetListingDictionary>(json).Entries) {
+                var listing = ConvertFromSerializable(entry);
+                assetListing[listing.Path] = listing;
+            }
+        }
+        return assetListing;
+    }
+    private static Dictionary<string, AssetListing> sDeleteAssetEntries = new Dictionary<string, AssetListing>();
+
+    private enum WindowEvents { StripProject = 1, SelectAll, DeselectAll, InvertSelection, ScanProject }
     private class BackgroundColorScope : GUI.Scope
     {
         private readonly Color m_Color;
@@ -38,7 +91,6 @@ public class AssetStripperWindow : EditorWindow
     }
 
     private static readonly Color BetterBlue = new Color(75 / 255f, 175f / 255f, 1f);
-    private static Dictionary<string, AssetListing> sDeleteAssetEntries = new Dictionary<string, AssetListing>();
     private static Vector2 sScroll;
     private static string sFilterWords;
     private static bool sIsIncludingScripts, sIsIncludingEditorScripts;
@@ -166,6 +218,7 @@ public class AssetStripperWindow : EditorWindow
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
                 var assetDeleteFileGUIDList = Runtime.GatherAssetsToStrip(sIsIncludingScripts, sIsIncludingEditorScripts);
                 sDeleteAssetEntries = PopulateDeleteFileListing(assetDeleteFileGUIDList);
+                SaveToSessionState(sDeleteAssetEntries);
             } else {
                 Debug.Log("The user has chosen to cancel scan since there were unmodified changes.");
             }
@@ -300,9 +353,7 @@ public class AssetStripperWindow : EditorWindow
     {
         if (string.IsNullOrEmpty(sFilterWords)) return true;
 
-        var split = sFilterWords.ToLower().Split(" ");
-        for (var i = 0; i < split.Length; i++) {
-            var word = split[i]; // Note: Can't write to foreach iterator (since iterators are readonly)
+        foreach (var word in sFilterWords.ToLower().Split(" ")) {
             if (!word.StartsWith("-") && !path.ToLower().Contains(word)) return false; // Matches
             if (word.StartsWith("-") && path.ToLower().Contains(word.TrimStart('-'))) return false; // Excludes
         }
@@ -321,15 +372,13 @@ public class AssetStripperWindow : EditorWindow
                 if (string.IsNullOrWhiteSpace(parts[i])) continue;
 
                 var part = parts[i];
+                var isFile = i == parts.Length - 1;
                 var take = new List<string>();
                 for (var j = 0; j < Math.Min(i + 1, parts.Length); j++) take.Add(parts[j]);
                 var currentPath = string.Join("/", take);
 
                 if (!currentDict.TryGetValue(part, out var currentItem)) {
-                    if (!(AssetDatabase.GetCachedIcon(currentPath) is Texture2D icon)) {
-                        icon = EditorGUIUtility.FindTexture("Folder Icon"); // It's a folder
-                        if (i == parts.Length - 1) icon = EditorGUIUtility.FindTexture("DefaultAsset Icon"); // It's a file
-                    }
+                    var icon = LoadAppropiateIcon(isFile, currentPath);
                     currentItem = new AssetListing
                     {
                         Path = currentPath,
@@ -344,5 +393,19 @@ public class AssetStripperWindow : EditorWindow
         }
 
         return result;
+    }
+
+    private static Texture2D LoadAppropiateIcon(bool isFile, string currentPath)
+    {
+        var icon = AssetDatabase.GetCachedIcon(currentPath) as Texture2D; // Use OS associated icon
+        if (icon == null && isFile) icon = EditorGUIUtility.FindTexture("DefaultAsset Icon"); // It's a file
+        if (icon == null) icon = EditorGUIUtility.FindTexture("Folder Icon"); // It's a folder
+        return icon;
+    }
+
+    [UnityEditor.Callbacks.DidReloadScripts]
+    protected static void OnScriptsReloaded()
+    {
+        sDeleteAssetEntries = LoadFromSessionState();
     }
 }
