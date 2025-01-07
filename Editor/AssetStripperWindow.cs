@@ -34,14 +34,14 @@ public class AssetStripperWindow : EditorWindow
         public bool IsMarkedForDelete, IsExpanded;
         public Dictionary<string, AssetListing> Children = new Dictionary<string, AssetListing>();
     }
-    [System.Serializable]
+    [Serializable]
     private class SerializableAssetListing
     {
         public string Path;
         public bool IsMarkedForDelete, IsExpanded;
         public List<SerializableAssetListing> Children = new List<SerializableAssetListing>();
     }
-    [System.Serializable]
+    [Serializable]
     private class SerializableAssetListingDictionary
     {
         public List<SerializableAssetListing> Entries = new List<SerializableAssetListing>();
@@ -54,7 +54,7 @@ public class AssetStripperWindow : EditorWindow
     }
     private static AssetListing ConvertFromSerializable(SerializableAssetListing serializable)
     {
-        var listing = new AssetListing { Path = serializable.Path, Icon = LoadAppropiateIcon(Path.HasExtension(serializable.Path), serializable.Path), IsMarkedForDelete = serializable.IsMarkedForDelete, IsExpanded = serializable.IsExpanded };
+        var listing = new AssetListing { Path = serializable.Path, Icon = LoadAppropriateIcon(Path.HasExtension(serializable.Path), serializable.Path), IsMarkedForDelete = serializable.IsMarkedForDelete, IsExpanded = serializable.IsExpanded };
         foreach (var child in serializable.Children) {
             var childListing = ConvertFromSerializable(child);
             listing.Children[childListing.Path] = childListing;
@@ -378,7 +378,7 @@ public class AssetStripperWindow : EditorWindow
                 var currentPath = string.Join("/", take);
 
                 if (!currentDict.TryGetValue(part, out var currentItem)) {
-                    var icon = LoadAppropiateIcon(isFile, currentPath);
+                    var icon = LoadAppropriateIcon(isFile, currentPath);
                     currentItem = new AssetListing
                     {
                         Path = currentPath,
@@ -395,7 +395,7 @@ public class AssetStripperWindow : EditorWindow
         return result;
     }
 
-    private static Texture2D LoadAppropiateIcon(bool isFile, string currentPath)
+    private static Texture2D LoadAppropriateIcon(bool isFile, string currentPath)
     {
         var icon = AssetDatabase.GetCachedIcon(currentPath) as Texture2D; // Use OS associated icon
         if (icon == null && isFile) icon = EditorGUIUtility.FindTexture("DefaultAsset Icon"); // It's a file
